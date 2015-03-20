@@ -13,7 +13,7 @@ bottle = Bottle()
 @bottle.route('/')
 def hello():
     """Return a friendly HTTP greeting."""
-    return 'Hello World'
+    return 'Hello FG'
 
 
 # Define an handler for 404 errors.
@@ -21,3 +21,4 @@ def hello():
 def error_404(error):
     """Return a custom 404 error."""
     return 'Sorry, Nothing at this URL.'
+
