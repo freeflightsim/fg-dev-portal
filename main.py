@@ -20,14 +20,14 @@ SITE_TITLE ="FG Dev Portal"
 
 NAV = [
     {"page": "index", "title": "Welcome"},
-    {"page": "codeissues", "title": "Code Issues"},
-    {"page": "aircraftissues", "title": "Aircraft Issues"}
+    {"page": "issues/code", "title": "Code Issues"},
+    {"page": "issues/aircraft", "title": "Aircraft Issues"}
 ]
 
 # Sourceforge API
 # = https://sourceforge.net/p/forge/documentation/Allura%20API/#tracker"""
 
-SF_URL = "http://sourceforge.net/rest/p/flightgear"
+SF_API_URL = "http://sourceforge.net/rest/p/flightgear"
 T_CODE = "codetickets"
 T_ADDON = "tickets"
 
@@ -36,22 +36,29 @@ def make_payload():
     """Creates a default json payload (`success` is an Extjs thing)"""
     return dict(success=True, error=None)
 
+class Context(object):
+
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
 
 def make_context():
+    """Creates a default pre-populated context for templates, c=c"""
     dic = {
         "site": {"title": SITE_TITLE, "nav": NAV},
 
     }
     return dic
 
-"""Tickets Summary"""	
-def get_tickets(what):
-	
-	ki = "summary_%s" % what
+
+def get_tickets(ticket_type):
+	"""Tickets Summary"""
+	ki = "summary_%s" % ticket_type
 	rows = memcache.get(ki)
 	
 	if rows == None:
-		url = SF_URL + "/%s?limit=3000" % T_CODE
+		url = SF_API_URL + "/%s?limit=3000" % ticket_type
 		result = urlfetch.fetch(url)
 		if result.status_code != 200:
 			print "\tOOPS:" , result.status_code
@@ -60,23 +67,38 @@ def get_tickets(what):
 		rows = decoded_data['tickets']
 		memcache.set(ki, rows, time=60)
 	return rows, None	
-	
 
+
+#=========================================
+# HTML Pages
+#=========================================
 @bottle.route('/')
+@bottle.route('/index')
 def index():
     c = make_context()
     return render("index.html", c=c)
 
+@bottle.route('/issues/<issues_type>')
+def issues(issues_type):
+    c = make_context()
+    c['issues_type'] = issues_type
+    if not issues_type in ["code", "aircraft"]:
+        c.error = 'Invalid issue type'
+    else:
+        sf_endpoint = T_CODE if issues_type == "code" else T_ADDON
+        c.issues = get_tickets(sf_endpoint)
+    return render("issues.html", c=c)
 
-
+#=========================================
+# Ajax
+#=========================================
 @bottle.route('/ajax/tickets/code')
 def ajax_tickets_code():
 
 	payload = make_payload()
 	
 	payload['tickets'], payload['error'] = get_tickets(T_CODE)
-	
-	
+
 	return payload
 
 
