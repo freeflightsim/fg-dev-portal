@@ -48,7 +48,7 @@ def get_tickets(what):
 @bottle.route('/')
 def index():
    
-    return 'Hello FsssssssssG'
+    return 'Hello FG Devs'
 
 
 
