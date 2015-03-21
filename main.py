@@ -16,6 +16,13 @@ bottle.debug(True)
 # the App Engine WSGI application server.
 #bottle = Bottle()
 
+SITE_TITLE ="FG Dev Portal"
+
+NAV = [
+    {"page": "index", "title": "Welcome"},
+    {"page": "codeissues", "title": "Code Issues"},
+    {"page": "aircraftissues", "title": "Aircraft Issues"}
+]
 
 # Sourceforge API
 # = https://sourceforge.net/p/forge/documentation/Allura%20API/#tracker"""
@@ -24,10 +31,18 @@ SF_URL = "http://sourceforge.net/rest/p/flightgear"
 T_CODE = "codetickets"
 T_ADDON = "tickets"
 
-"""Creates a default payload (`success` is an Extjs thing)"""
-def make_payload():
-	return dict(success=True, error=None)
 
+def make_payload():
+    """Creates a default json payload (`success` is an Extjs thing)"""
+    return dict(success=True, error=None)
+
+
+def make_context():
+    dic = {
+        "site": {"title": SITE_TITLE, "nav": NAV},
+
+    }
+    return dic
 
 """Tickets Summary"""	
 def get_tickets(what):
@@ -42,7 +57,6 @@ def get_tickets(what):
 			print "\tOOPS:" , result.status_code
 			return None, result.status_code
 		decoded_data = json.loads(result.content)
-		print "DEC:" , decoded_data.keys()
 		rows = decoded_data['tickets']
 		memcache.set(ki, rows, time=60)
 	return rows, None	
@@ -50,8 +64,8 @@ def get_tickets(what):
 
 @bottle.route('/')
 def index():
-   
-    return render("index.html")
+    c = make_context()
+    return render("index.html", c=c)
 
 
 
