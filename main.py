@@ -5,6 +5,9 @@ import json
 from google.appengine.api import urlfetch
 from google.appengine.api import memcache
 import bottle
+from bottle import TEMPLATE_PATH,  jinja2_template as render
+
+TEMPLATE_PATH.append("./templates")
 
 bottle.debug(True)
 
@@ -48,7 +51,7 @@ def get_tickets(what):
 @bottle.route('/')
 def index():
    
-    return 'Hello FG Devs'
+    return render("index.html")
 
 
 
